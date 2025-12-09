@@ -19,7 +19,7 @@ type Node struct {
 	// ID is the node id of the node.
 	ID *ua.NodeID
 
-	c *Client
+	C *Client
 }
 
 func (n *Node) String() string {
@@ -111,7 +111,7 @@ func (n *Node) Value(ctx context.Context) (*ua.Variant, error) {
 func (n *Node) Attribute(ctx context.Context, attrID ua.AttributeID) (*ua.Variant, error) {
 	rv := &ua.ReadValueID{NodeID: n.ID, AttributeID: attrID}
 	req := &ua.ReadRequest{NodesToRead: []*ua.ReadValueID{rv}}
-	res, err := n.c.Read(ctx, req)
+	res, err := n.C.Read(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (n *Node) Attributes(ctx context.Context, attrID ...ua.AttributeID) ([]*ua.
 		rv := &ua.ReadValueID{NodeID: n.ID, AttributeID: id}
 		req.NodesToRead = append(req.NodesToRead, rv)
 	}
-	res, err := n.c.Read(ctx, req)
+	res, err := n.C.Read(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (n *Node) ReferencedNodes(ctx context.Context, refs uint32, dir ua.BrowseDi
 		return nil, err
 	}
 	for _, r := range res {
-		nodes = append(nodes, n.c.NodeFromExpandedNodeID(r.NodeID))
+		nodes = append(nodes, n.C.NodeFromExpandedNodeID(r.NodeID))
 	}
 	return nodes, nil
 }
@@ -194,7 +194,7 @@ func (n *Node) References(ctx context.Context, refType uint32, dir ua.BrowseDire
 		NodesToBrowse:                 []*ua.BrowseDescription{desc},
 	}
 
-	resp, err := n.c.Browse(ctx, req)
+	resp, err := n.C.Browse(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +208,7 @@ func (n *Node) browseNext(ctx context.Context, results []*ua.BrowseResult) ([]*u
 			ContinuationPoints:        [][]byte{results[0].ContinuationPoint},
 			ReleaseContinuationPoints: false,
 		}
-		resp, err := n.c.BrowseNext(ctx, req)
+		resp, err := n.C.BrowseNext(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +241,7 @@ func (n *Node) TranslateBrowsePathsToNodeIDs(ctx context.Context, pathNames []*u
 	}
 
 	var nodeID *ua.NodeID
-	err := n.c.Send(ctx, &req, func(i ua.Response) error {
+	err := n.C.Send(ctx, &req, func(i ua.Response) error {
 		if resp, ok := i.(*ua.TranslateBrowsePathsToNodeIDsResponse); ok {
 			if len(resp.Results) == 0 {
 				return ua.StatusBadUnexpectedError
